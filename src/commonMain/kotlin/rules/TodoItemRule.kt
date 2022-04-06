@@ -1,10 +1,11 @@
 package rules
 
 import nodes.INode
-import nodes.TitleNode
 
-class TitleRule : IRule {
-    override val regex = Regex.fromLiteral("")
+class TodoItemRule : IRule {
+    override val regex: Regex
+        get() = TODO("Not yet implemented")
+
     override fun parse(raw: String): List<INode> {
         TODO("Not yet implemented")
     }
