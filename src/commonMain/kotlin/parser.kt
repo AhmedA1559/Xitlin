@@ -1,5 +1,7 @@
+import nodes.INode
+
 class Parser {
-    private fun nodeVisitor(curNode: Node) {
+    private fun nodeVisitor(curNode: INode) {
         when (curNode.nodeType) {
             Name.ROOT -> {
                 // parse for groups
@@ -7,7 +9,6 @@ class Parser {
             }
             Name.GROUP -> {
                 addNodesByRegex(curNode, Name.TITLE)
-                
                 addNodesByRegex(curNode, Name.ITEM)
             }
             Name.ITEM -> {
@@ -17,33 +18,37 @@ class Parser {
                 addNodesByRegex(curNode, Name.DUE_DATE)
                 addNodesByRegex(curNode, Name.TAG)
             }
-            else -> {
-                return
-            }
+            else -> return
         }
     }
 
-    private fun addNodesByRegex(curNode: Node, name: Name) {
+    private fun addNodesByRegex(curNode: INode, name: Name) {
         val matches = Rules.ruleMap[name]?.find(curNode.rawString)
         if (matches != null) {
             for (match in matches.groupValues) {
-                val itemNode: Node = Node(name, match)
+                val itemNode = INode(name, match)
                 nodeVisitor(itemNode)
                 curNode.add(itemNode)
             }
         }
     }
 
-    fun parse(rawString: String) {
-        var curNode: Node = Node(Name.ROOT, rawString); // first node is root
+    fun parse(rawString: String): Map<String, dynamic> {
+        val curNode = INode(Name.ROOT, rawString); // first node is root
         nodeVisitor(curNode)
+        return curNode.toMap()
     }
 }
 
 class Rules {
     companion object {
         val ruleMap = mapOf(
-            Name.GROUP to Regex.fromLiteral("((^\\w+\$)?(^.*\$)+)")
+            Name.GROUP to Regex.fromLiteral("((^\\w+\$)?(^.*\$)+)"),
+            Name.TITLE to Regex.fromLiteral("^\\w+.*\$"),
+            Name.ITEM to Regex.fromLiteral("^\\[.\\].*(\\s{5}.*)?"),
+            Name.CHECKBOX to Regex.fromLiteral("^\\[(.)\\]"),
+            Name.PRIORITY to Regex.fromLiteral("(?<=^\\[.\\] )[!.]+(?= )"),
+            Name.TAG to Regex.fromLiteral("#([A-Za-z0-9_\\-]+(=([A-Za-z0-9_\\-])+|(['\\\"].*['\\\"]))?)")
         )
     }
 }
